@@ -3,10 +3,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { setupTestApp } from './helpers/setup-test-app';
 import type { App } from '@/index';
 
-let db, app: App;
+let app: App;
 
 beforeEach(() => {
-	({ app, db } = setupTestApp());
+	({ app } = setupTestApp());
 });
 
 describe('Cadastro de usuários', () => {
