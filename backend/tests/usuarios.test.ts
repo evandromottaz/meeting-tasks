@@ -11,9 +11,7 @@ beforeEach(() => {
 
 describe('Cadastro de usuários', () => {
 	it('deve cadastrar um novo usuário', async () => {
-		const res = await request(app)
-			.post('/usuarios')
-			.send({ nome: 'Evandro', email: 'evandro@email.com' });
+		const res = await request(app).post('/usuarios').send({ nome: 'Evandro' });
 
 		expect(res.status).toBe(201);
 		expect(res.body).toHaveProperty('id');
