@@ -65,7 +65,7 @@ CREATE TABLE ausencias (
   papel_id INTEGER NOT NULL,
   motivo TEXT,
   criado TEXT DEFAULT (datetime('now', '-3 hours')),
-  FOREIGN KEY (data_iso, papel_id, usuario_id) REFERENCES designacoes(data_iso, papel_id, usuario_id) ON DELETE CASCADE
+  FOREIGN KEY (data_iso, papel_id, usuario_id) REFERENCES designacoes(data_iso, papel_id, usuario_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) STRICT;
 CREATE VIEW designacoes_info AS
 SELECT d.id, d.data_iso AS data, p.titulo AS papel, u.nome AS usuario
