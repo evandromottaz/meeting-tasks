@@ -1,20 +1,12 @@
 import request from 'supertest';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createApp, App } from '@/index';
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
+import { setupTestApp } from './helpers/setup-test-app';
+import type { App } from '@/index';
 
-const schemaPath = path.resolve(__dirname, './schema.test.sql');
-
-let db: InstanceType<typeof Database>;
-let app: App;
+let db, app: App;
 
 beforeEach(() => {
-	db = new Database(':memory:');
-	const schema = fs.readFileSync(schemaPath, 'utf-8');
-	db.exec(schema);
-	app = createApp(db);
+	({ app, db } = setupTestApp());
 });
 
 describe('Cadastro de usuários', () => {
