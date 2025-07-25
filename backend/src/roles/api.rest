@@ -1,0 +1,24 @@
+### CREATE
+POST http://localhost:3000/roles
+Content-Type: application/json
+
+{
+  "title": "Leitor duplicado"
+}
+
+### READ ALL
+GET http://localhost:3000/roles
+
+### READ ONE
+GET http://localhost:3000/roles/2
+
+### UPDATE
+POST http://localhost:3000/roles/
+Content-Type: application/json
+
+{
+  "title": "Leitor duplicado"
+}
+
+### Deletar usuário
+DELETE http://localhost:3000/roles/29

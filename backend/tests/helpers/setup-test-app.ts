@@ -5,7 +5,7 @@ import { createApp } from '@/index';
 
 export function setupTestApp() {
   const db = new Database(':memory:');
-  const schema = fs.readFileSync(path.resolve(__dirname, '../schema.test.sql'), 'utf-8');
+  const schema = fs.readFileSync(path.resolve(__dirname, './schema.test.sql'), 'utf-8');
   db.exec(schema);
 
   const app = createApp(db);
