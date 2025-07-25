@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { schema } from './schema';
-import { MESSAGES } from './messages';
 import { PermissionError, PermissionModel, PermissionRow } from './model';
 import { PermissionRepository } from './repository';
 
