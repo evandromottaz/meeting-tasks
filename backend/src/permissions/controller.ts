@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { schema } from './schema';
-import { PermissionError, PermissionModel, PermissionRow } from './model';
+import { PermissionError, PermissionModel } from './model';
 import { PermissionRepository } from './repository';
 
 export async function create(req: Request, res: Response) {

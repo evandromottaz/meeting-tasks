@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { schema } from './schema';
-import { RoleError, RoleModel, RoleRow } from './model';
+import { RoleError, RoleModel } from './model';
 import { RoleRepository } from './repository';
 
 export async function create(req: Request, res: Response) {
