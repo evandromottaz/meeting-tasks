@@ -28,13 +28,9 @@ export async function getAll(req: Request, res: Response) {
 
 export async function getById(req: Request, res: Response) {
 	try {
-		const id = Number(req.params.id);
-		if (isNaN(id)) throw new RoleError(400, 'ID precisa ser um número');
-
 		const repository = new RoleRepository(req.db);
-		const data = repository.getById(id);
-		if (!data) throw new RoleError(404, 'papel não encontrado.');
-
+		const model = new RoleModel(repository);
+		const data = model.getById(+req.params.id);
 		res.json(data);
 	} catch (error) {
 		if (error instanceof RoleError)
@@ -50,14 +46,9 @@ export async function update(req: Request, res: Response) {
 		const result = schema.safeParse(req.body);
 		if (!result.success) throw new RoleError(400, result.error.issues[0].message);
 
-		const id = Number(req.params.id);
-		if (isNaN(id)) throw new RoleError(400, 'ID precisa ser um número');
-
-		const { title } = result.data;
 		const repository = new RoleRepository(req.db);
 		const model = new RoleModel(repository);
-		const data = model.update({ title, id });
-
+		const data = model.update({ title: result.data.title, id: +req.params.id });
 		res.json(data);
 	} catch (error) {
 		if (error instanceof RoleError)
@@ -70,13 +61,9 @@ export async function update(req: Request, res: Response) {
 
 export async function remove(req: Request, res: Response) {
 	try {
-		const id = Number(req.params.id);
-		if (isNaN(id)) throw new RoleError(400, 'ID precisa ser um número');
-
 		const repository = new RoleRepository(req.db);
 		const model = new RoleModel(repository);
-		const data = model.remove(id);
-
+		const data = model.remove(+req.params.id);
 		res.json(data);
 	} catch (error) {
 		if (error instanceof RoleError)

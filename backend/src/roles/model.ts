@@ -33,6 +33,8 @@ export class RoleModel {
 	}
 
 	update(role: Role) {
+		if (isNaN(Number(role.id))) throw new RoleError(400, 'ID precisa ser um número');
+
 		const row = !!this.repository.getById(role.id);
 		if (!row) throw new RoleError(404, 'Papel não encontrado.');
 
@@ -40,10 +42,21 @@ export class RoleModel {
 	}
 
 	remove(id: Role['id']) {
+		if (isNaN(Number(id))) throw new RoleError(400, 'ID precisa ser um número');
+
 		const row = this.repository.getById(id);
 		if (!row) throw new RoleError(404, 'Papel não encontrado.');
 
 		this.repository.remove(id);
 		return { message: 'Papel deletado com sucesso', status: 200 };
+	}
+
+	getById(id: Role['id']) {
+		if (isNaN(Number(id))) throw new RoleError(400, 'ID precisa ser um número');
+
+		const data = this.repository.getById(id);
+		if (!data) throw new RoleError(404, 'Papel não encontrado.');
+
+		return data;
 	}
 }
