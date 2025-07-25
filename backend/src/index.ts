@@ -1,5 +1,5 @@
 import express from 'express';
-import usuariosRoutes from '@/usuarios/routes';
+import volunteersRoutes from '@/volunteers/routes';
 import papeisRoutes from '@/papeis/routes';
 import designacoesRoutes from '@/designacoes/routes';
 import Database from 'better-sqlite3';
@@ -15,7 +15,7 @@ export function createApp(db: InstanceType<typeof Database>) {
     next();
   });
 
-  app.use('/usuarios', usuariosRoutes);
+  app.use('/volunteers', volunteersRoutes);
   app.use('/papeis', papeisRoutes);
   app.use('/designacoes', designacoesRoutes);
 

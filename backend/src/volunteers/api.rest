@@ -1,0 +1,24 @@
+### CREATE
+POST http://localhost:3000/volunteers
+Content-Type: application/json
+
+{
+  "name": "Evandro duplicado"
+}
+
+### READ ALL
+GET http://localhost:3000/volunteers
+
+### READ ONE
+GET http://localhost:3000/volunteers/20
+
+### UPDATE
+POST http://localhost:3000/volunteers/
+Content-Type: application/json
+
+{
+  "name": "Evandro duplicado"
+}
+
+### Deletar usuário
+DELETE http://localhost:3000/volunteers/29
