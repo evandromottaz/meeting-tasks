@@ -1,52 +1,75 @@
 import { Request, Response } from 'express';
 import { schema } from './schema';
-import { MESSAGES } from './messages';
-import { createVolunteer, VolunteerRow } from './model';
+import { VolunteerError, VolunteerModel } from './model';
+import { VolunteerRepository } from './repository';
 
 export async function create(req: Request, res: Response) {
-	const result = schema.safeParse(req.body);
-	if (!result.success) return res.status(400).json({ message: result.error.issues[0].message });
+	try {
+		const result = schema.safeParse(req.body);
+		if (!result.success) throw new VolunteerError(400, result.error.issues[0].message);
 
-	const { name } = result.data;
-	const { lastInsertRowid } = req.db
-		.prepare('INSERT INTO volunteers (volunteer_name) VALUES (?)')
-		.run(name);
-	res.status(201).json({ id: lastInsertRowid, name });
+		const repository = new VolunteerRepository(req.db);
+		const data = repository.create(result.data);
+		res.status(201).json(data);
+	} catch (error) {
+		if (error instanceof VolunteerError)
+			return res.status(error.status).json({ message: error.message });
+
+		console.error(error);
+		res.status(500).json({ message: 'Erro desconhecido ao tentar criar voluntário.' });
+	}
 }
 
 export async function getAll(req: Request, res: Response) {
-	const volunteers = req.db.prepare('SELECT id, volunteer_name FROM volunteers').all();
-	res.status(200).json((volunteers as VolunteerRow[]).map(createVolunteer));
+	const repository = new VolunteerRepository(req.db);
+	const data = repository.listAll();
+	res.status(200).json(data);
 }
 
 export async function getById(req: Request, res: Response) {
-	const id = Number(req.params.id);
-	const row = req.db.prepare('SELECT volunteer_name FROM volunteers WHERE id = ?').get(id);
-	if (!row) return res.status(404).json({ message: MESSAGES.NOT_FOUND });
+	try {
+		const repository = new VolunteerRepository(req.db);
+		const model = new VolunteerModel(repository);
+		const data = model.getById(+req.params.id);
+		res.json(data);
+	} catch (error) {
+		if (error instanceof VolunteerError)
+			return res.status(error.status).json({ message: error.message });
 
-	res.json(createVolunteer(row as VolunteerRow));
+		console.error(error);
+		res.status(500).json({ message: 'Erro desconhecido ao buscar voluntário.' });
+	}
 }
 
 export async function update(req: Request, res: Response) {
-	const result = schema.safeParse(req.body);
-	if (!result.success) return res.status(400).json({ message: result.error.issues[0].message });
+	try {
+		const result = schema.safeParse(req.body);
+		if (!result.success) throw new VolunteerError(400, result.error.issues[0].message);
 
-	const id = Number(req.params.id);
-	if (isNaN(id)) return res.status(400).json({ message: MESSAGES.INVALID_ID });
+		const repository = new VolunteerRepository(req.db);
+		const model = new VolunteerModel(repository);
+		const data = model.update({ name: result.data.name, id: +req.params.id });
+		res.json(data);
+	} catch (error) {
+		if (error instanceof VolunteerError)
+			return res.status(error.status).json({ message: error.message });
 
-	const { name } = result.data;
-	const row = req.db.prepare('UPDATE volunteers SET volunteer_name = ? WHERE id = ?').run(name, id);
-	if (!row.changes) return res.status(404).json({ message: MESSAGES.NOT_FOUND });
-
-	res.json({ id, name });
+		console.error(error);
+		res.status(500).json({ message: 'Erro desconhecido ao atualizar voluntário.' });
+	}
 }
 
 export async function remove(req: Request, res: Response) {
-	const id = Number(req.params.id);
-	if (isNaN(id)) return res.status(400).json({ message: MESSAGES.INVALID_ID });
+	try {
+		const repository = new VolunteerRepository(req.db);
+		const model = new VolunteerModel(repository);
+		const data = model.remove(+req.params.id);
+		res.json(data);
+	} catch (error) {
+		if (error instanceof VolunteerError)
+			return res.status(error.status).json({ message: error.message });
 
-	const row = req.db.prepare('DELETE FROM volunteers WHERE id = ?').run(id);
-	if (!row.changes) return res.status(404).json({ message: MESSAGES.NOT_FOUND });
-
-	res.json({ message: MESSAGES.DELETED });
+		console.error(error);
+		res.status(500).json({ message: 'Erro desconhecido ao tentar deletar voluntário.' });
+	}
 }
