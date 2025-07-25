@@ -22,11 +22,10 @@ export function createApp(db: InstanceType<typeof Database>) {
   return app;
 }
 
+const dbPath = path.resolve(__dirname, './database/db.sqlite');
+
 if (require.main === module) {
-  const schemaPath = path.resolve(__dirname, './database/schema.sql');
-  const schema = fs.readFileSync(schemaPath, 'utf-8');
-  const db = new Database(`${__dirname}/database/db.sqlite`);
-  db.exec(schema);
+  const db = new Database(dbPath);
 
   const app = createApp(db);
   app.listen(3000, () => {

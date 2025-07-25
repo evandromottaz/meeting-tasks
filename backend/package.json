@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+	"pretest": "ts-node scripts/export-schema.ts",
     "test": "vitest",
+	"reset-db": "ts-node scripts/reset-db.ts",
     "dev": "ts-node-dev -r tsconfig-paths/register src/index.ts"
   },
   "keywords": [],
