@@ -31,6 +31,7 @@ export async function getAll(req: Request, res: Response) {
 export async function getById(req: Request, res: Response) {
 	try {
 		const id = Number(req.params.id);
+		if (isNaN(id)) throw new PermissionError(400, 'ID precisa ser um número');
 
 		const repository = new PermissionRepository(req.db);
 		const permission = repository.getById(id);
