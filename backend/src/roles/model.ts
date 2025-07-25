@@ -1,5 +1,14 @@
+import { RoleRepository } from './repository';
+
+export interface RoleError {
+	error: {
+		message: string;
+		status: number;
+	} | null;
+}
+
 export interface Role {
-	id: number;
+	id?: number;
 	title: string;
 }
 
@@ -8,9 +17,33 @@ export interface RoleRow {
 	role_title: string;
 }
 
-export function createRole(row: RoleRow): Role {
-	return {
-		id: row.id,
-		title: row.role_title,
-	};
+export class RoleError extends Error {
+	status: number;
+
+	constructor(status: number, message: string) {
+		super(message);
+		this.name = 'roleError';
+		this.status = status;
+	}
+}
+
+export class RoleModel {
+	constructor(readonly repository: RoleRepository) {
+		this.repository = repository;
+	}
+
+	update(role: Role) {
+		const row = !!this.repository.getById(role.id);
+		if (!row) throw new RoleError(404, 'Papel não encontrado.');
+
+		return this.repository.update(role);
+	}
+
+	remove(id: Role['id']) {
+		const row = this.repository.getById(id);
+		if (!row) throw new RoleError(404, 'Papel não encontrado.');
+
+		this.repository.remove(id);
+		return { message: 'Papel deletado com sucesso', status: 200 };
+	}
 }
