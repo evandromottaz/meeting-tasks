@@ -75,21 +75,7 @@ CREATE TABLE meetings (
 		created TEXT DEFAULT (datetime ('now', '-3 hours'))
 
 	) STRICT;
-CREATE TABLE ausencias (
 
-		date_iso TEXT NOT NULL,
-
-		"volunteer_id" INTEGER NOT NULL,
-
-		task_id INTEGER NOT NULL,
-
-		motivo TEXT,
-
-		created TEXT DEFAULT (datetime ('now', '-3 hours')),
-
-		FOREIGN KEY (date_iso, task_id, "volunteer_id") REFERENCES meetings (date_iso, task_id, "volunteer_id") ON DELETE CASCADE ON UPDATE CASCADE
-
-	) STRICT;
 CREATE VIEW meetings_info AS
 
 SELECT
