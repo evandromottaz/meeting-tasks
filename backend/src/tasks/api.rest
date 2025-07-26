@@ -1,5 +1,5 @@
 ### CREATE
-POST http://localhost:3000/roles
+POST http://localhost:3000/tasks
 Content-Type: application/json
 
 {
@@ -7,13 +7,13 @@ Content-Type: application/json
 }
 
 ### READ ALL
-GET http://localhost:3000/roles
+GET http://localhost:3000/tasks
 
 ### READ ONE
-GET http://localhost:3000/roles/2
+GET http://localhost:3000/tasks/2
 
 ### UPDATE
-POST http://localhost:3000/roles/
+POST http://localhost:3000/tasks/
 Content-Type: application/json
 
 {
@@ -21,4 +21,4 @@ Content-Type: application/json
 }
 
 ### Deletar usuário
-DELETE http://localhost:3000/roles/29
+DELETE http://localhost:3000/tasks/29

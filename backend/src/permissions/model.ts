@@ -10,19 +10,13 @@ export interface PermissionError {
 
 export interface Permission {
 	id?: number | bigint;
-	roleId: number;
+	taskId: number;
 	volunteerId: number;
 }
 
 interface SuccessReturning {
 	data: Permission;
 	message: string;
-}
-
-export interface PermissionRow {
-	id: number | bigint;
-	role_id: number;
-	volunteer_id: number;
 }
 
 export class PermissionError extends Error {
