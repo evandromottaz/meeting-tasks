@@ -6,3 +6,7 @@ export const schema = z.object({
 	taskId: z.number({ error: MEETING_MESSAGES.TASK_ID_INVALID }).int().positive(),
 	volunteerId: z.number({ error: MEETING_MESSAGES.VOLUNTEER_ID_INVALID }).int().positive(),
 });
+
+export const updateSchema = schema.extend({
+	date: schema.shape.date.optional(),
+});

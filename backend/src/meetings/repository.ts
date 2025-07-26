@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
-import { Meeting, MeetingError } from './model';
-import { PERMISSION_MESSAGES } from '@/shared/const';
+import { Meeting, SuccessReturning } from './model';
+import { MEETING_MESSAGES } from '@/shared/const';
+import { NotFoundError } from '@/shared/exceptions';
 
 interface Row {
 	id: number | bigint;
@@ -39,11 +40,8 @@ export class MeetingRepository {
 	}
 
 	getById(id: Meeting['id']): Meeting {
-		const row = this.db
-			.prepare('SELECT id, task_id, volunteer_id FROM meetings WHERE id = ?')
-			.get(id) as Row;
-
-		if (!row) throw new MeetingError(404, PERMISSION_MESSAGES.NOT_FOUND);
+		const row = this.db.prepare('SELECT * FROM meetings WHERE id = ?').get(id) as Row;
+		if (!row) throw new NotFoundError(MEETING_MESSAGES.NOT_FOUND);
 
 		return {
 			id: row.id,
@@ -53,15 +51,29 @@ export class MeetingRepository {
 		};
 	}
 
-	update({ taskId, volunteerId, id }: Meeting) {
-		this.db
-			.prepare('UPDATE meetings SET task_id = ?, volunteer_id = ? WHERE id = ?')
-			.run(taskId, volunteerId, id);
+	update({ taskId, volunteerId, id }: Omit<Meeting, 'date'>) {
+		const queryMap = new Map([
+			['task_id', taskId],
+			['volunteer_id', volunteerId],
+		]);
 
-		return { id, taskId, volunteerId };
+		if (!taskId) queryMap.delete('task_id');
+		if (!volunteerId) queryMap.delete('volunteer_id');
+
+		const query = [...queryMap.keys()].map((column) => `${column} = ?`).join(',');
+
+		const row = this.db
+			.prepare(`UPDATE meetings SET ${query} WHERE id = ?`)
+			.run(...queryMap.values(), id);
+
+		if (!row.changes) throw new NotFoundError(MEETING_MESSAGES.NOT_FOUND);
+		const data = this.db.prepare('SELECT * FROM meetings WHERE id = ?').get(id) as Row;
+
+		return { id, date: data.date_iso, taskId: data.task_id, volunteerId: data.volunteer_id };
 	}
 
 	remove(id: Meeting['id']) {
-		this.db.prepare('DELETE FROM meetings WHERE id = ?').run(id);
+		const row = this.db.prepare('DELETE FROM meetings WHERE id = ?').run(id);
+		if (!row.changes) throw new NotFoundError(MEETING_MESSAGES.NOT_FOUND);
 	}
 }

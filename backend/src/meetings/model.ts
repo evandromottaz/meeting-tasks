@@ -1,12 +1,6 @@
 import { MEETING_MESSAGES, PERMISSION_MESSAGES } from '@/shared/const';
 import { MeetingRepository } from './repository';
-
-export interface MeetingError {
-	error: {
-		message: string;
-		status: number;
-	} | null;
-}
+import { BadRequestError, ForbiddenError, NotFoundError } from '@/shared/exceptions';
 
 export interface Meeting {
 	id?: number | bigint;
@@ -15,19 +9,9 @@ export interface Meeting {
 	volunteerId: number;
 }
 
-interface SuccessReturning {
+export interface SuccessReturning {
 	data: Meeting;
 	message: string;
-}
-
-export class MeetingError extends Error {
-	status: number;
-
-	constructor(status: number, message: string) {
-		super(message);
-		this.name = 'meetingError';
-		this.status = status;
-	}
 }
 
 interface TaskRepository {
@@ -39,7 +23,7 @@ interface VolunteerRepository {
 }
 
 interface PermissionRepository {
-	findByVolunteerAndRole: ({
+	findByVolunteerAndTask: ({
 		taskId,
 		volunteerId,
 	}: Pick<Meeting, 'taskId' | 'volunteerId'>) => unknown;
@@ -47,14 +31,14 @@ interface PermissionRepository {
 
 interface Props {
 	readonly repository: MeetingRepository;
-	readonly permissionRepository: PermissionRepository;
+	readonly permissionRepository?: PermissionRepository;
 	readonly volunteerRepository?: VolunteerRepository;
 	readonly taskRepository?: TaskRepository;
 }
 
 export class MeetingModel {
 	private readonly repository: MeetingRepository;
-	private readonly permissionRepository: PermissionRepository;
+	private readonly permissionRepository?: PermissionRepository;
 	private readonly volunteerRepository?: VolunteerRepository;
 	private readonly taskRepository?: TaskRepository;
 
@@ -74,17 +58,53 @@ export class MeetingModel {
 		if (!this.taskRepository) throw new Error(MEETING_MESSAGES.TASK_REPOSITORY_REQUIRED);
 
 		const volunteer = this.volunteerRepository.getById(meeting.volunteerId);
-		if (!volunteer) throw new MeetingError(404, MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);
+		if (!volunteer) throw new NotFoundError(MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);
 
 		const task = this.taskRepository.getById(meeting.taskId);
-		if (!task) throw new MeetingError(404, MEETING_MESSAGES.TASK_NOT_FOUND);
+		if (!task) throw new NotFoundError(MEETING_MESSAGES.TASK_NOT_FOUND);
 
-		const hasPermission = !!this.permissionRepository.findByVolunteerAndRole(meeting);
-		if (!hasPermission) throw new MeetingError(403, MEETING_MESSAGES.PERMISSION_DENIED);
+		const hasPermission = !!this.permissionRepository.findByVolunteerAndTask(meeting);
+		if (!hasPermission) throw new ForbiddenError(MEETING_MESSAGES.PERMISSION_DENIED);
 
 		return {
 			data: this.repository.create(meeting),
 			message: MEETING_MESSAGES.CREATED,
 		};
+	}
+
+	getById(id: Meeting['id']): SuccessReturning {
+		if (isNaN(Number(id))) throw new BadRequestError(MEETING_MESSAGES.ID_INVALID);
+
+		const data = this.repository.getById(id);
+		return { data, message: MEETING_MESSAGES.FOUND };
+	}
+
+	update(meeting: Omit<Meeting, 'date'>): SuccessReturning {
+		if (isNaN(Number(meeting.id))) throw new BadRequestError(MEETING_MESSAGES.ID_INVALID);
+
+		if (!this.volunteerRepository) throw new Error(MEETING_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
+
+		if (!this.taskRepository) throw new Error(MEETING_MESSAGES.TASK_REPOSITORY_REQUIRED);
+
+		const volunteer = this.volunteerRepository.getById(meeting.volunteerId);
+		if (!volunteer) throw new NotFoundError(MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);
+
+		const task = this.taskRepository.getById(meeting.taskId);
+		if (!task) throw new NotFoundError(MEETING_MESSAGES.TASK_NOT_FOUND);
+
+		if (!this.permissionRepository)
+			throw new Error(MEETING_MESSAGES.PERMISSION_REPOSITORY_REQUIRED);
+
+		const hasPermission = !!this.permissionRepository.findByVolunteerAndTask(meeting);
+		if (!hasPermission) throw new ForbiddenError(MEETING_MESSAGES.PERMISSION_DENIED);
+
+		return { data: this.repository.update(meeting), message: MEETING_MESSAGES.UPDATED };
+	}
+
+	remove(id: Meeting['id']) {
+		if (isNaN(Number(id))) throw new BadRequestError(MEETING_MESSAGES.ID_INVALID);
+
+		this.repository.remove(id);
+		return { message: MEETING_MESSAGES.DELETED };
 	}
 }
