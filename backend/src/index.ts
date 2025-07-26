@@ -23,7 +23,7 @@ export function createApp(db: InstanceType<typeof Database>) {
 	return app;
 }
 
-const dbPath = path.resolve(__dirname, './database/db.sqlite');
+const dbPath = path.resolve(__dirname, '../database/db.sqlite');
 
 if (require.main === module) {
 	const db = new Database(dbPath);
