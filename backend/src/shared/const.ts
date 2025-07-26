@@ -25,7 +25,7 @@ export const MEETING_MESSAGES = {
 	NOT_FOUND: 'Designação não encontrada',
 	PERMISSION_DENIED: 'Voluntário não tem permissão para essa designação',
 	VOLUNTEER_NOT_FOUND: 'Voluntário não foi encontrado',
-	TASK_NOT_FOUND: 'Voluntário não foi encontrado',
+	TASK_NOT_FOUND: 'Tarefa não foi encontrada',
 	ALREADY_EXISTS: 'Essa designação já foi cadastrada',
 	ID_INVALID: '"id" precisa ser um número',
 	DATE_INVALID: 'Formato deve ser YYYY-MM-DD',

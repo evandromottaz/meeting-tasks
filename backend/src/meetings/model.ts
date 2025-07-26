@@ -86,14 +86,14 @@ export class MeetingModel {
 
 		if (!this.taskRepository) throw new Error(MEETING_MESSAGES.TASK_REPOSITORY_REQUIRED);
 
+		if (!this.permissionRepository)
+			throw new Error(MEETING_MESSAGES.PERMISSION_REPOSITORY_REQUIRED);
+
 		const volunteer = this.volunteerRepository.getById(meeting.volunteerId);
 		if (!volunteer) throw new NotFoundError(MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);
 
 		const task = this.taskRepository.getById(meeting.taskId);
 		if (!task) throw new NotFoundError(MEETING_MESSAGES.TASK_NOT_FOUND);
-
-		if (!this.permissionRepository)
-			throw new Error(MEETING_MESSAGES.PERMISSION_REPOSITORY_REQUIRED);
 
 		const hasPermission = !!this.permissionRepository.findByVolunteerAndTask(meeting);
 		if (!hasPermission) throw new ForbiddenError(MEETING_MESSAGES.PERMISSION_DENIED);
