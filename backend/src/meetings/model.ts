@@ -52,10 +52,14 @@ export class MeetingModel {
 	create(meeting: Meeting): SuccessReturning {
 		if (!this.permissionRepository)
 			throw new Error(MEETING_MESSAGES.PERMISSION_REPOSITORY_REQUIRED);
-
 		if (!this.volunteerRepository) throw new Error(MEETING_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
-
 		if (!this.taskRepository) throw new Error(MEETING_MESSAGES.TASK_REPOSITORY_REQUIRED);
+
+		const date = new Date(meeting.date).getTime();
+		if (isNaN(date)) throw new BadRequestError(MEETING_MESSAGES.DATE_INVALID);
+
+		const now = new Date().getTime();
+		if (date < now) throw new BadRequestError(MEETING_MESSAGES.DATE_INVALID_RANGE);
 
 		const volunteer = this.volunteerRepository.getById(meeting.volunteerId);
 		if (!volunteer) throw new NotFoundError(MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);

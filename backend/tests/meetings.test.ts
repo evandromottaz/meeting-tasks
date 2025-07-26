@@ -19,7 +19,7 @@ type DefaultValues = {
 } & Values;
 
 const values: Values = {
-	date: '2025-07-26',
+	date: '2027-07-26',
 	volunteerId: 1,
 	taskId: 1,
 };
@@ -70,7 +70,7 @@ describe('Cadastra designação', () => {
 		it('caso tarefa não exista', async () => {
 			const res = await makeSut({ ...defaultValues, taskId: 3 });
 			expect(res.status).toBe(404);
-			expect(res.body.message).toBe(MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);
+			expect(res.body.message).toBe(MEETING_MESSAGES.TASK_NOT_FOUND);
 		});
 		it('caso voluntário não exista', async () => {
 			const res = await makeSut({ ...defaultValues, volunteerId: 3 });
@@ -81,6 +81,16 @@ describe('Cadastra designação', () => {
 			const res = await makeSut({ ...defaultValues, permission: false });
 			expect(res.status).toBe(403);
 			expect(res.body.message).toBe(MEETING_MESSAGES.PERMISSION_DENIED);
+		});
+		it('caso data seja invalida', async () => {
+			const res = await makeSut({ ...defaultValues, date: '0000-00-00' });
+			expect(res.status).toBe(400);
+			expect(res.body.message).toBe(MEETING_MESSAGES.DATE_INVALID);
+		});
+		it('caso a data seja anterior a hoje', async () => {
+			const res = await makeSut({ ...defaultValues, date: '2025-07-25' });
+			expect(res.status).toBe(400);
+			expect(res.body.message).toBe(MEETING_MESSAGES.DATE_INVALID_RANGE);
 		});
 	});
 });
