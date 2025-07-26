@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { Task } from './model';
 
-interface TaskRow {
+interface Row {
 	id: number;
 	task_title: string;
 }
@@ -20,14 +20,14 @@ export class TaskRepository {
 
 	listAll(): Task[] {
 		const rows = this.db.prepare('SELECT id, task_title FROM tasks').all();
-		return (rows as TaskRow[]).map(({ task_title, id }) => ({
+		return (rows as Row[]).map(({ task_title, id }) => ({
 			id,
 			title: task_title,
 		}));
 	}
 
 	getById(id: Task['id']): Task | null {
-		const row = this.db.prepare('SELECT id, task_title FROM tasks WHERE id = ?').get(id) as TaskRow;
+		const row = this.db.prepare('SELECT id, task_title FROM tasks WHERE id = ?').get(id) as Row;
 		if (!row) return null;
 
 		return {
