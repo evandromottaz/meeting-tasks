@@ -10,7 +10,6 @@ export async function create(req: Request, res: Response) {
 
 		const repository = new PermissionRepository(req.db);
 		const model = new PermissionModel(repository);
-
 		const permission = model.create(result.data);
 		res.status(201).json(permission);
 	} catch (error) {
@@ -30,13 +29,9 @@ export async function getAll(req: Request, res: Response) {
 
 export async function getById(req: Request, res: Response) {
 	try {
-		const id = Number(req.params.id);
-		if (isNaN(id)) throw new PermissionError(400, 'ID precisa ser um número');
-
 		const repository = new PermissionRepository(req.db);
-		const permission = repository.getById(id);
-		if (!permission) throw new PermissionError(404, 'Permissão não encontrada.');
-
+		const model = new PermissionModel(repository);
+		const permission = model.getById(+req.params.id);
 		res.json(permission);
 	} catch (error) {
 		if (error instanceof PermissionError)
@@ -52,13 +47,10 @@ export async function update(req: Request, res: Response) {
 		const result = schema.safeParse(req.body);
 		if (!result.success) throw new PermissionError(400, result.error.issues[0].message);
 
-		const id = Number(req.params.id);
-		if (isNaN(id)) throw new PermissionError(400, 'ID precisa ser um número');
-
 		const { roleId, volunteerId } = result.data;
 		const repository = new PermissionRepository(req.db);
 		const model = new PermissionModel(repository);
-		const permission = model.update({ roleId, volunteerId, id });
+		const permission = model.update({ roleId, volunteerId, id: +req.params.id });
 
 		res.json(permission);
 	} catch (error) {
@@ -72,12 +64,9 @@ export async function update(req: Request, res: Response) {
 
 export async function remove(req: Request, res: Response) {
 	try {
-		const id = Number(req.params.id);
-		if (isNaN(id)) throw new PermissionError(400, 'ID precisa ser um número');
-
 		const repository = new PermissionRepository(req.db);
 		const model = new PermissionModel(repository);
-		const permission = model.remove(id);
+		const permission = model.remove(+req.params.id);
 
 		res.json(permission);
 	} catch (error) {
