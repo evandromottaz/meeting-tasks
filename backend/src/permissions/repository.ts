@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
-import { Permission, PermissionRow } from './model';
+import { Permission, PermissionError, PermissionRow } from './model';
+import { PERMISSION_MESSAGES } from '@/shared/const';
 
 export class PermissionRepository {
 	constructor(readonly db: InstanceType<typeof Database>) {
@@ -40,7 +41,8 @@ export class PermissionRepository {
 		const row = this.db
 			.prepare('SELECT id, role_id, volunteer_id FROM permissions WHERE id = ?')
 			.get(id) as PermissionRow;
-		if (!row) return null;
+
+		if (!row) throw new PermissionError(404, PERMISSION_MESSAGES.NOT_FOUND);
 
 		return {
 			id: row.id,
