@@ -56,7 +56,7 @@ export class PermissionModel {
 		const task = this.taskRepository.getById(permission.taskId);
 		if (!task) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
 
-		const alreadyExists = this.repository.findByVolunteerAndRole(permission);
+		const alreadyExists = this.repository.findByVolunteerAndTask(permission);
 		if (alreadyExists) throw new PermissionError(409, PERMISSION_MESSAGES.ALREADY_EXISTS);
 
 		return {

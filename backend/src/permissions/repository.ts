@@ -20,7 +20,7 @@ export class PermissionRepository {
 		return { id: lastInsertRowid, taskId, volunteerId };
 	}
 
-	findByVolunteerAndRole({ taskId, volunteerId }: Permission) {
+	findByVolunteerAndTask({ taskId, volunteerId }: Permission) {
 		return this.db
 			.prepare('SELECT id FROM permissions WHERE task_id = ? AND volunteer_id = ?')
 			.get(taskId, volunteerId);
