@@ -29,17 +29,32 @@ export class PermissionError extends Error {
 	}
 }
 
+interface TaskRepository {
+	getById: (id: number) => unknown;
+}
+
+interface VolunteerRepository {
+	getById: (id: number) => unknown;
+}
+
 export class PermissionModel {
-	constructor(readonly repository: PermissionRepository) {
-		this.repository = repository;
-	}
+	constructor(
+		readonly repository: PermissionRepository,
+		private readonly taskRepository?: TaskRepository,
+		private readonly volunteerRepository?: VolunteerRepository
+	) {}
 
 	create(permission: Permission): SuccessReturning {
-		const volunteer = this.repository.getVolunteer(permission.volunteerId);
+		if (!this.volunteerRepository)
+			throw new Error(PERMISSION_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
+
+		if (!this.taskRepository) throw new Error(PERMISSION_MESSAGES.TASK_REPOSITORY_REQUIRED);
+
+		const volunteer = this.volunteerRepository.getById(permission.volunteerId);
 		if (!volunteer) throw new PermissionError(404, PERMISSION_MESSAGES.VOLUNTEER_NOT_FOUND);
 
-		const role = this.repository.getRole(permission.roleId);
-		if (!role) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
+		const task = this.taskRepository.getById(permission.taskId);
+		if (!task) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
 
 		const alreadyExists = this.repository.findByVolunteerAndRole(permission);
 		if (alreadyExists) throw new PermissionError(409, PERMISSION_MESSAGES.ALREADY_EXISTS);
@@ -51,14 +66,19 @@ export class PermissionModel {
 	}
 
 	update(permission: Permission): SuccessReturning {
+		if (!this.volunteerRepository)
+			throw new Error(PERMISSION_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
+
+		if (!this.taskRepository) throw new Error(PERMISSION_MESSAGES.TASK_REPOSITORY_REQUIRED);
+
 		if (isNaN(Number(permission.id)))
 			throw new PermissionError(400, PERMISSION_MESSAGES.ID_INVALID);
 
-		const volunteer = this.repository.getVolunteer(permission.volunteerId);
+		const volunteer = this.volunteerRepository.getById(permission.volunteerId);
 		if (!volunteer) throw new PermissionError(404, PERMISSION_MESSAGES.VOLUNTEER_NOT_FOUND);
 
-		const role = this.repository.getRole(permission.roleId);
-		if (!role) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
+		const task = this.taskRepository.getById(permission.taskId);
+		if (!task) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
 
 		const row = this.repository.getById(permission.id);
 		if (!row) throw new PermissionError(404, PERMISSION_MESSAGES.NOT_FOUND);

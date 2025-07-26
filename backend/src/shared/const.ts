@@ -10,6 +10,8 @@ export const PERMISSION_MESSAGES = {
 	NOT_FOUND: 'Permissão não encontrada',
 	DELETED: 'Permissão deletada com sucesso',
 	FOUND: 'Permissão encontrada',
+	TASK_REPOSITORY_REQUIRED: 'TaskRepository é necessário',
+	VOLUNTEER_REPOSITORY_REQUIRED: 'VolunteerRepository é necessário',
 } as const;
 
 export const TASK_MESSAGES = {

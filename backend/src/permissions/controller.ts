@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { schema } from './schema';
 import { PermissionError, PermissionModel } from './model';
 import { PermissionRepository } from './repository';
+import { TaskRepository } from '@/tasks/repository';
+import { VolunteerRepository } from '@/volunteers/repository';
 
 export async function create(req: Request, res: Response) {
 	try {
@@ -9,9 +11,12 @@ export async function create(req: Request, res: Response) {
 		if (!result.success) throw new PermissionError(400, result.error.issues[0].message);
 
 		const repository = new PermissionRepository(req.db);
-		const model = new PermissionModel(repository);
-		const permission = model.create(result.data);
-		res.status(201).json(permission);
+		const taskRepository = new TaskRepository(req.db);
+		const volunteerRepository = new VolunteerRepository(req.db);
+		const model = new PermissionModel(repository, taskRepository, volunteerRepository);
+
+		const data = model.create(result.data);
+		res.status(201).json(data);
 	} catch (error) {
 		if (error instanceof PermissionError)
 			return res.status(error.status).json({ message: error.message });
@@ -31,8 +36,9 @@ export async function getById(req: Request, res: Response) {
 	try {
 		const repository = new PermissionRepository(req.db);
 		const model = new PermissionModel(repository);
-		const permission = model.getById(+req.params.id);
-		res.json(permission);
+
+		const data = model.getById(+req.params.id);
+		res.json(data);
 	} catch (error) {
 		if (error instanceof PermissionError)
 			return res.status(error.status).json({ message: error.message });
@@ -47,12 +53,14 @@ export async function update(req: Request, res: Response) {
 		const result = schema.safeParse(req.body);
 		if (!result.success) throw new PermissionError(400, result.error.issues[0].message);
 
-		const { roleId, volunteerId } = result.data;
+		const { taskId, volunteerId } = result.data;
 		const repository = new PermissionRepository(req.db);
-		const model = new PermissionModel(repository);
-		const permission = model.update({ roleId, volunteerId, id: +req.params.id });
+		const taskRepository = new TaskRepository(req.db);
+		const volunteerRepository = new VolunteerRepository(req.db);
+		const model = new PermissionModel(repository, taskRepository, volunteerRepository);
 
-		res.json(permission);
+		const data = model.update({ taskId, volunteerId, id: +req.params.id });
+		res.json(data);
 	} catch (error) {
 		if (error instanceof PermissionError)
 			return res.status(error.status).json({ message: error.message });
@@ -66,9 +74,9 @@ export async function remove(req: Request, res: Response) {
 	try {
 		const repository = new PermissionRepository(req.db);
 		const model = new PermissionModel(repository);
-		const permission = model.remove(+req.params.id);
 
-		res.json(permission);
+		const data = model.remove(+req.params.id);
+		res.json(data);
 	} catch (error) {
 		if (error instanceof PermissionError)
 			return res.status(error.status).json({ message: error.message });

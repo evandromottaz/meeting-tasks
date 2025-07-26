@@ -1,37 +1,37 @@
 import express from 'express';
 import volunteersRoutes from '@/volunteers/routes';
-import rolesRoutes from '@/roles/routes';
+import tasksRoutes from '@/tasks/routes';
 import permissionsRoutes from '@/permissions/routes';
 import designacoesRoutes from '@/designacoes/routes';
 import Database from 'better-sqlite3';
 import path from 'path';
 
 export function createApp(db: InstanceType<typeof Database>) {
-  const app = express();
-  app.use(express.json());
+	const app = express();
+	app.use(express.json());
 
-  app.use((req, _res, next) => {
-    req.db = db;
-    next();
-  });
+	app.use((req, _res, next) => {
+		req.db = db;
+		next();
+	});
 
-  app.use('/volunteers', volunteersRoutes);
-  app.use('/roles', rolesRoutes);
-  app.use('/permissions', permissionsRoutes);
-  app.use('/designacoes', designacoesRoutes);
+	app.use('/volunteers', volunteersRoutes);
+	app.use('/roles', tasksRoutes);
+	app.use('/permissions', permissionsRoutes);
+	app.use('/designacoes', designacoesRoutes);
 
-  return app;
+	return app;
 }
 
 const dbPath = path.resolve(__dirname, './database/db.sqlite');
 
 if (require.main === module) {
-  const db = new Database(dbPath);
+	const db = new Database(dbPath);
 
-  const app = createApp(db);
-  app.listen(3000, () => {
-    console.log('Servidor rodando na porta 3000');
-  });
+	const app = createApp(db);
+	app.listen(3000, () => {
+		console.log('Servidor rodando na porta 3000');
+	});
 }
 
 export type App = ReturnType<typeof createApp>;
