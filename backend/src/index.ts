@@ -16,7 +16,7 @@ export function createApp(db: InstanceType<typeof Database>) {
 	});
 
 	app.use('/volunteers', volunteersRoutes);
-	app.use('/roles', tasksRoutes);
+	app.use('/tasks', tasksRoutes);
 	app.use('/permissions', permissionsRoutes);
 	app.use('/designacoes', designacoesRoutes);
 
