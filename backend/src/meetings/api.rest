@@ -1,0 +1,28 @@
+### CREATE
+POST http://localhost:3000/meetings
+Content-Type: application/json
+
+{
+	"volunteerId": 1,
+  	"roleId": 1
+}
+
+### READ ALL
+GET http://localhost:3000/meetings
+
+### READ ONE
+GET http://localhost:3000/meetings/1
+
+### UPDATE
+PUT http://localhost:3000/meetings/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "data": "2025-07-27",
+  "roleId": 2,
+  "volunteerId": 1
+}
+
+### Deletar usuário
+DELETE http://localhost:3000/meetings/1

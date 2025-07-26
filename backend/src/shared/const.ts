@@ -17,3 +17,18 @@ export const PERMISSION_MESSAGES = {
 export const TASK_MESSAGES = {
 	TASK_ID_INVALID: '"taskId" precisa ser um número',
 };
+
+export const MEETING_MESSAGES = {
+	CREATED: 'Designação criada com sucesso',
+	PERMISSION_DENIED: 'Voluntário não tem permissão para essa designação',
+	VOLUNTEER_NOT_FOUND: 'Voluntário não foi encontrado',
+	TASK_NOT_FOUND: 'Voluntário não foi encontrado',
+	ALREADY_EXISTS: 'Essa designação já foi cadastrada',
+	DATE_INVALID: 'Formato deve ser YYYY-MM-DD',
+	TASK_ID_INVALID: '"taskId" precisa ser um número',
+	VOLUNTEER_ID_INVALID: '"volunteerId" precisa ser um número',
+	FOUND: 'Designação encontrada',
+	PERMISSION_REPOSITORY_REQUIRED: 'PermissionRepository é necessário',
+	VOLUNTEER_REPOSITORY_REQUIRED: 'VolunteerRepository é necessário',
+	TASK_REPOSITORY_REQUIRED: 'TaskRepository é necessário',
+};

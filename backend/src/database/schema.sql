@@ -62,11 +62,11 @@ CREATE TABLE IF NOT EXISTS "permissions" (
 		UNIQUE ("volunteer_id", task_id)
 
 	) STRICT;
-CREATE TABLE designacoes (
+CREATE TABLE meetings (
 
 		id INTEGER PRIMARY KEY,
 
-		data_iso TEXT NOT NULL,
+		date_iso TEXT NOT NULL,
 
 		task_id INTEGER NOT NULL REFERENCES tasks (id),
 
@@ -77,7 +77,7 @@ CREATE TABLE designacoes (
 	) STRICT;
 CREATE TABLE ausencias (
 
-		data_iso TEXT NOT NULL,
+		date_iso TEXT NOT NULL,
 
 		"volunteer_id" INTEGER NOT NULL,
 
@@ -87,16 +87,16 @@ CREATE TABLE ausencias (
 
 		created TEXT DEFAULT (datetime ('now', '-3 hours')),
 
-		FOREIGN KEY (data_iso, task_id, "volunteer_id") REFERENCES designacoes (data_iso, task_id, "volunteer_id") ON DELETE CASCADE ON UPDATE CASCADE
+		FOREIGN KEY (date_iso, task_id, "volunteer_id") REFERENCES meetings (date_iso, task_id, "volunteer_id") ON DELETE CASCADE ON UPDATE CASCADE
 
 	) STRICT;
-CREATE VIEW designacoes_info AS
+CREATE VIEW meetings_info AS
 
 SELECT
 
 	d.id,
 
-	d.data_iso AS data,
+	d.date_iso AS data,
 
 	p.task_title AS papel,
 
@@ -104,7 +104,7 @@ SELECT
 
 FROM
 
-	designacoes AS d
+	meetings AS d
 
 	INNER JOIN tasks AS p ON p.id = d.task_id
 
