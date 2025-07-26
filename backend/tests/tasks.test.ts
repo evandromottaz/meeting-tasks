@@ -9,29 +9,31 @@ beforeEach(() => {
 	({ app } = setupTestApp());
 });
 
-const createRole = async (title = 'Indicador') => await request(app).post('/roles').send({ title });
+const createTask = async (title = 'Indicador') => await request(app).post('/tasks').send({ title });
+const getTask = async (id: number | string = '') => await request(app).get(`/tasks/${id}`);
+const deleteTask = async (id: number | string = '') => await request(app).delete(`/tasks/${id}`);
+const updateTask = async (id: number | string, title: string) =>
+	await request(app).put(`/tasks/${id}`).send({ title });
 
 describe('Cadastra', () => {
 	describe('com sucesso', () => {
 		it('papel', async () => {
-			const res = await createRole();
+			const res = await createTask();
 
 			expect(res.status).toBe(201);
-			expect(res.body).toHaveProperty('id');
-			expect(res.body.title).toBe('Indicador');
+			expect(res.body).toStrictEqual({ id: 1, title: 'Indicador' });
 		});
 		it('papel "   indicador  " e retorna "indicador"', async () => {
-			const res = await createRole();
+			const res = await createTask();
 
 			expect(res.status).toBe(201);
-			expect(res.body).toHaveProperty('id');
-			expect(res.body.title).toBe('Indicador');
+			expect(res.body).toStrictEqual({ id: 1, title: 'Indicador' });
 		});
 	});
 
 	describe('com erro', () => {
 		it('caso enviar "title" vazio', async () => {
-			const res = await createRole('');
+			const res = await createTask('');
 
 			expect(res.status).toBe(400);
 			expect(res.body).toHaveProperty('message');
@@ -41,9 +43,10 @@ describe('Cadastra', () => {
 
 describe('Lista', () => {
 	it('papéis', async () => {
-		await createRole();
+		await createTask();
 
-		const res = await request(app).get('/roles');
+		const res = await getTask();
+
 		expect(res.statusCode).toBe(200);
 		expect(res.body).toStrictEqual([{ id: 1, title: 'Indicador' }]);
 	});
@@ -52,25 +55,28 @@ describe('Lista', () => {
 describe('Busca', () => {
 	describe('com sucesso', () => {
 		it('1 papel', async () => {
-			await createRole();
+			await createTask();
 
-			const res = await request(app).get('/roles/1');
+			const res = await getTask(1);
+
 			expect(res.statusCode).toBe(200);
 			expect(res.body).toStrictEqual({ id: 1, title: 'Indicador' });
 		});
 	});
 	describe('com erro', () => {
 		it('caso id não seja um número', async () => {
-			await createRole();
+			await createTask();
 
-			const res = await request(app).get('/roles/e');
+			const res = await getTask('e');
+
 			expect(res.statusCode).toBe(400);
 			expect(res.body).toHaveProperty('message');
 		});
 		it('caso papel não exista', async () => {
-			await createRole();
+			await createTask();
 
-			const res = await request(app).get('/roles/3');
+			const res = await getTask(3);
+
 			expect(res.statusCode).toBe(404);
 			expect(res.body).toHaveProperty('message');
 		});
@@ -80,9 +86,10 @@ describe('Busca', () => {
 describe('Atualiza', () => {
 	describe('com sucesso', () => {
 		it('nome do papel', async () => {
-			await createRole();
+			await createTask();
 
-			const res = await request(app).put('/roles/1').send({ title: 'Microfone Volante' });
+			const res = await updateTask(1, 'Microfone Volante');
+
 			expect(res.statusCode).toBe(200);
 			expect(res.body.title).toBe('Microfone Volante');
 		});
@@ -90,26 +97,24 @@ describe('Atualiza', () => {
 
 	describe('com erro', () => {
 		it('caso papel não exista', async () => {
-			await request(app).post('/roles').send({ title: 'Indicador' });
-
-			const res = await request(app).put('/roles/2').send({ title: 'Microfone Volante' });
+			await createTask();
+			const res = await updateTask(2, 'Microfone Volante');
 			expect(res.statusCode).toBe(404);
 		});
 		it('caso id não for um número', async () => {
-			await request(app).post('/roles').send({ title: 'Indicador' });
-
-			const res = await request(app).put('/roles/e').send({ title: 'Microfone Volante' });
+			await createTask();
+			const res = await updateTask('e', 'Microfone Volante');
 			expect(res.statusCode).toBe(400);
 		});
 	});
 });
 
-describe('Deleta', () => {
+describe('Deleta tarefa', () => {
 	describe('com sucesso', () => {
 		it('o papel e envia uma mensagem', async () => {
-			await request(app).post('/roles').send({ title: 'Indicador' });
+			await createTask();
 
-			const res = await request(app).delete('/roles/1');
+			const res = await deleteTask(1);
 
 			expect(res.statusCode).toBe(200);
 			expect(res.body).toHaveProperty('message');
@@ -117,17 +122,19 @@ describe('Deleta', () => {
 	});
 
 	describe('com erro', () => {
-		it('caso papel não exista', async () => {
-			await request(app).post('/roles').send({ title: 'Indicador' });
+		it('caso a tarefa não exista', async () => {
+			await createTask();
 
-			const res = await request(app).delete('/roles/2');
+			const res = await deleteTask(2);
+
 			expect(res.statusCode).toBe(404);
 			expect(res.body).toHaveProperty('message');
 		});
 		it('caso id não for um número', async () => {
-			await request(app).post('/roles').send({ title: 'Indicador' });
+			await createTask();
 
-			const res = await request(app).delete('/roles/e');
+			const res = await deleteTask('e');
+
 			expect(res.statusCode).toBe(400);
 			expect(res.body).toHaveProperty('message');
 		});

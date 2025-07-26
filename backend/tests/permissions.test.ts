@@ -29,7 +29,7 @@ beforeEach(async () => {
 
 const createVolunteer = (name = 'Evandro') => request(app).post('/volunteers').send({ name });
 
-const createRole = (title = 'Indicador') => request(app).post('/roles').send({ title });
+const createRole = (title = 'Indicador') => request(app).post('/tasks').send({ title });
 
 const createPermission = ({ taskId = 1, volunteerId = 1 }: Values = {}) =>
 	request(app).post('/permissions').send({ taskId, volunteerId });
