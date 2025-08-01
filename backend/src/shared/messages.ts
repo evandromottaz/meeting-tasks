@@ -20,6 +20,7 @@ export const TASK_MESSAGES = {
 
 export const MEETING_MESSAGES = {
 	CREATED: 'Designação criada com sucesso',
+	CREATED_ERROR_PERMISSION: 'Não foi possível criar a reunião devido a erros de permissão',
 	UPDATED: 'Designação atualizada com sucesso',
 	DELETED: 'Designação deletada com sucesso',
 	NOT_FOUND: 'Designação não encontrada',
@@ -31,7 +32,12 @@ export const MEETING_MESSAGES = {
 	DATE_INVALID_FORMAT: 'Formato do parâmetro "date" deve ser YYYY-MM-DD',
 	DATE_INVALID_RANGE: 'Data só pode ser futura',
 	DATE_INVALID: 'Data inválida',
-	TASK_ID_INVALID: '"taskId" precisa ser um número',
+	CHAIRMAN_ID_INVALID: '"chairmanId" precisa ser um número',
+	TREASURES_TALKER_ID_INVALID: '"treasuresSpeakerId" precisa ser um número',
+	SPIRITUAL_GEMS_DIRECTOR_ID_INVALID: '"spiritualGemsDirectorId" precisa ser um número',
+	BOOK_STUDY_DIRECTOR_ID_INVALID: '"bookStudyDirectorId" precisa ser um número',
+	BOOK_STUDY_READER_ID_INVALID: '"bookStudyReaderId" precisa ser um número',
+	TREASURES_TITLE_REQUIRED: '"treasuresTitle" é obrigatório',
 	VOLUNTEER_ID_INVALID: '"volunteerId" precisa ser um número',
 	FOUND: 'Designação encontrada',
 	PERMISSION_REPOSITORY_REQUIRED: 'PermissionRepository é necessário',

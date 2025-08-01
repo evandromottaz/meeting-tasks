@@ -2,7 +2,7 @@ import request from 'supertest';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupTestApp } from './helpers/setup-test-app';
 import type { App } from '@/index';
-import { PERMISSION_MESSAGES, TASK_MESSAGES } from '@/shared/const';
+import { PERMISSION_MESSAGES } from '@/shared/messages';
 
 let app: App;
 

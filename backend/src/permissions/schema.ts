@@ -1,4 +1,4 @@
-import { PERMISSION_MESSAGES } from '@/shared/const';
+import { PERMISSION_MESSAGES } from '@/shared/messages';
 import { z } from 'zod';
 
 export const schema = z.object({

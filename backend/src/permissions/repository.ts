@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import { Permission, PermissionError } from './model';
-import { PERMISSION_MESSAGES } from '@/shared/const';
+import { PERMISSION_MESSAGES } from '@/shared/messages';
 
 interface Row {
 	id: number | bigint;
@@ -20,10 +20,22 @@ export class PermissionRepository {
 		return { id: lastInsertRowid, taskId, volunteerId };
 	}
 
-	findByVolunteerAndTask({ taskId, volunteerId }: Permission) {
+	findByVolunteerIdAndTaskId({ taskId, volunteerId }: Permission) {
 		return this.db
 			.prepare('SELECT id FROM permissions WHERE task_id = ? AND volunteer_id = ?')
 			.get(taskId, volunteerId);
+	}
+
+	findByVolunteerIdAndTaskTitle({ taskTitle, volunteerId }: Permission) {
+		return this.db
+			.prepare(
+				`SELECT t.task_title, t.id AS task_id, v.id AS volunteer_id, v.volunteer_name
+				FROM tasks t
+				INNER JOIN permissions p
+				INNER JOIN volunteers v
+				WHERE task_title = ? AND volunteer_id = ?`
+			)
+			.get(taskTitle, volunteerId);
 	}
 
 	listAll(): Permission[] {
@@ -36,9 +48,7 @@ export class PermissionRepository {
 	}
 
 	getById(id: Permission['id']): Permission | null {
-		const row = this.db
-			.prepare('SELECT id, task_id, volunteer_id FROM permissions WHERE id = ?')
-			.get(id) as Row;
+		const row = this.db.prepare('SELECT id, task_id, volunteer_id FROM permissions WHERE id = ?').get(id) as Row;
 
 		if (!row) throw new PermissionError(404, PERMISSION_MESSAGES.NOT_FOUND);
 
@@ -50,9 +60,7 @@ export class PermissionRepository {
 	}
 
 	update({ taskId, volunteerId, id }: Permission) {
-		this.db
-			.prepare('UPDATE permissions SET task_id = ?, volunteer_id = ? WHERE id = ?')
-			.run(taskId, volunteerId, id);
+		this.db.prepare('UPDATE permissions SET task_id = ?, volunteer_id = ? WHERE id = ?').run(taskId, volunteerId, id);
 
 		return { id, taskId, volunteerId };
 	}

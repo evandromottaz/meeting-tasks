@@ -1,4 +1,4 @@
-import { PERMISSION_MESSAGES } from '@/shared/const';
+import { PERMISSION_MESSAGES } from '@/shared/messages';
 import { PermissionRepository } from './repository';
 
 export interface PermissionError {
@@ -10,7 +10,8 @@ export interface PermissionError {
 
 export interface Permission {
 	id?: number | bigint;
-	taskId: number;
+	taskId?: number;
+	taskTitle?: string;
 	volunteerId: number;
 }
 
@@ -45,8 +46,7 @@ export class PermissionModel {
 	) {}
 
 	create(permission: Permission): SuccessReturning {
-		if (!this.volunteerRepository)
-			throw new Error(PERMISSION_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
+		if (!this.volunteerRepository) throw new Error(PERMISSION_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
 
 		if (!this.taskRepository) throw new Error(PERMISSION_MESSAGES.TASK_REPOSITORY_REQUIRED);
 
@@ -56,7 +56,8 @@ export class PermissionModel {
 		const task = this.taskRepository.getById(permission.taskId);
 		if (!task) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
 
-		const alreadyExists = this.repository.findByVolunteerAndTask(permission);
+		const alreadyExists = this.repository.findByVolunteerIdAndTaskId(permission);
+
 		if (alreadyExists) throw new PermissionError(409, PERMISSION_MESSAGES.ALREADY_EXISTS);
 
 		return {
@@ -66,13 +67,11 @@ export class PermissionModel {
 	}
 
 	update(permission: Permission): SuccessReturning {
-		if (!this.volunteerRepository)
-			throw new Error(PERMISSION_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
+		if (!this.volunteerRepository) throw new Error(PERMISSION_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
 
 		if (!this.taskRepository) throw new Error(PERMISSION_MESSAGES.TASK_REPOSITORY_REQUIRED);
 
-		if (isNaN(Number(permission.id)))
-			throw new PermissionError(400, PERMISSION_MESSAGES.ID_INVALID);
+		if (isNaN(Number(permission.id))) throw new PermissionError(400, PERMISSION_MESSAGES.ID_INVALID);
 
 		const volunteer = this.volunteerRepository.getById(permission.volunteerId);
 		if (!volunteer) throw new PermissionError(404, PERMISSION_MESSAGES.VOLUNTEER_NOT_FOUND);

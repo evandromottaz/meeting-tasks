@@ -12,9 +12,7 @@ export class VolunteerRepository {
 	}
 
 	create({ name }: Volunteer) {
-		const { lastInsertRowid } = this.db
-			.prepare('INSERT INTO volunteers(volunteer_name) VALUES (?)')
-			.run(name);
+		const { lastInsertRowid } = this.db.prepare('INSERT INTO volunteers(volunteer_name) VALUES (?)').run(name);
 		return { id: lastInsertRowid, name };
 	}
 
@@ -27,15 +25,22 @@ export class VolunteerRepository {
 	}
 
 	getById(id: Volunteer['id']): Volunteer | null {
-		const row = this.db
-			.prepare('SELECT id, volunteer_name FROM volunteers WHERE id = ?')
-			.get(id) as Row;
+		const row = this.db.prepare('SELECT id, volunteer_name FROM volunteers WHERE id = ?').get(id) as Row;
 		if (!row) return null;
 
 		return {
 			id: row.id,
 			name: row.volunteer_name,
 		};
+	}
+
+	getByName(volunteerName: string): Volunteer | null {
+		const row = this.db
+			.prepare('SELECT id, volunteer_name FROM volunteers WHERE volunteer_name = ?')
+			.get(volunteerName) as Row;
+		if (!row) return null;
+
+		return { id: row.id, name: row.volunteer_name };
 	}
 
 	update({ name, id }: Volunteer) {

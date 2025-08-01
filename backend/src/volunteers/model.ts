@@ -1,4 +1,6 @@
+import { BadRequestError } from '@/shared/exceptions';
 import { VolunteerRepository } from './repository';
+import { MESSAGES } from './messages';
 
 export interface VolunteerError {
 	error: {
@@ -25,6 +27,12 @@ export class VolunteerError extends Error {
 export class VolunteerModel {
 	constructor(readonly repository: VolunteerRepository) {
 		this.repository = repository;
+	}
+
+	create(volunteerName: string) {
+		const volunteer = this.repository.getByName(volunteerName);
+		if (volunteer) throw new BadRequestError(`${MESSAGES.ALREADY_EXISTIS}: ${volunteerName}`);
+		return this.repository.create({ name: volunteerName });
 	}
 
 	update(volunteer: Volunteer) {

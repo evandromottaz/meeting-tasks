@@ -18,8 +18,7 @@ export async function create(req: Request, res: Response) {
 		const data = model.create(result.data);
 		res.status(201).json(data);
 	} catch (error) {
-		if (error instanceof PermissionError)
-			return res.status(error.status).json({ message: error.message });
+		if (error instanceof PermissionError) return res.status(error.status).json({ message: error.message });
 
 		console.error(error);
 		res.status(500).json({ message: 'Erro desconhecido ao tentar criar permissão.' });
@@ -40,8 +39,7 @@ export async function getById(req: Request, res: Response) {
 		const data = model.getById(+req.params.id);
 		res.json(data);
 	} catch (error) {
-		if (error instanceof PermissionError)
-			return res.status(error.status).json({ message: error.message });
+		if (error instanceof PermissionError) return res.status(error.status).json({ message: error.message });
 
 		console.error(error);
 		res.status(500).json({ message: 'Erro desconhecido ao buscar permissão.' });
@@ -62,8 +60,7 @@ export async function update(req: Request, res: Response) {
 		const data = model.update({ taskId, volunteerId, id: +req.params.id });
 		res.json(data);
 	} catch (error) {
-		if (error instanceof PermissionError)
-			return res.status(error.status).json({ message: error.message });
+		if (error instanceof PermissionError) return res.status(error.status).json({ message: error.message });
 
 		console.error(error);
 		res.status(500).json({ message: 'Erro desconhecido ao atualizar permissão.' });
@@ -78,8 +75,7 @@ export async function remove(req: Request, res: Response) {
 		const data = model.remove(+req.params.id);
 		res.json(data);
 	} catch (error) {
-		if (error instanceof PermissionError)
-			return res.status(error.status).json({ message: error.message });
+		if (error instanceof PermissionError) return res.status(error.status).json({ message: error.message });
 
 		console.error(error);
 		res.status(500).json({ message: 'Erro desconhecido ao deletar permissão.' });
