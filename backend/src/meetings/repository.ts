@@ -42,7 +42,7 @@ export class MeetingRepository implements IMeetingRepository {
 
 	create({ date, ...meeting }: MeetingInput): MeetingOutput {
 		const meetingOverviewTransaction = this.db.transaction(() => {
-			const meetingSQLMapper = new Map<keyof MeetingRow, string | number>([
+			const meetingSQLMapper = new Map<keyof MeetingRow, string | number | undefined>([
 				['date_iso', date],
 				['chairman_id', meeting.chairmanId],
 				['treasures_talker_id', meeting.treasuresTalkerId],
@@ -52,14 +52,16 @@ export class MeetingRepository implements IMeetingRepository {
 				['book_study_reader_id', meeting.bookStudyReaderId],
 			]);
 
-			const meetingKeys = [...meetingSQLMapper.keys()];
-			const meetingValues = [...meetingSQLMapper.values()];
+			const meetingEntries = [...meetingSQLMapper.entries()].filter((entry) => entry[1] !== undefined);
+			const meetingKeys = meetingEntries.map((entry) => entry[0]);
+			const meetingValues = meetingEntries.map((entry) => entry[1]);
 
-			this.db
+			const row = this.db
 				.prepare(`INSERT INTO meetings(${meetingKeys.join(', ')}) VALUES (${meetingKeys.map(() => '?').join(', ')})`)
 				.run(...meetingValues);
+			if (!row.changes) throw new Error('Reunião não foi cadastrada no banco');
 
-			if (meeting.fieldMinistry) {
+			if (Array.isArray(meeting.fieldMinistry)) {
 				const fieldMinistryStmt = this.db.prepare(
 					'INSERT INTO meetings_field_ministry(meeting_date, student_id, helper_id, title, task_id) VALUES (?, ?, ?, ?, ?)'
 				);
@@ -74,7 +76,7 @@ export class MeetingRepository implements IMeetingRepository {
 				}
 			}
 
-			if (meeting.christianLife) {
+			if (Array.isArray(meeting.christianLife)) {
 				const christianLifeStmt = this.db.prepare(
 					'INSERT INTO meetings_christian_life(meeting_date, director_id, title) VALUES (?, ?, ?)'
 				);
@@ -85,6 +87,7 @@ export class MeetingRepository implements IMeetingRepository {
 			}
 
 			const overview = this.db.prepare('SELECT * FROM meetings_overview WHERE date_iso = ?').get(date);
+
 			const fieldMinistry = this.db
 				.prepare('SELECT * FROM meetings_field_ministry_overview WHERE meeting_date = ?')
 				.all(date);
@@ -99,6 +102,7 @@ export class MeetingRepository implements IMeetingRepository {
 			};
 		});
 		const { overview, christianLife, fieldMinistry } = meetingOverviewTransaction();
+
 		return {
 			date: overview.date_iso,
 			chairmanId: overview.chairman_id,
