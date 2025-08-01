@@ -167,7 +167,7 @@ CREATE TABLE
 		date_iso TEXT NOT NULL PRIMARY KEY,
 		chairman_id INTEGER REFERENCES volunteers (id) ON DELETE SET NULL,
 		"treasures_talker_id" INTEGER REFERENCES volunteers (id) ON DELETE SET NULL,
-		treasures_title TEXT NOT NULL,
+		treasures_title TEXT,
 		spiritual_gems_director_id INTEGER REFERENCES volunteers (id) ON DELETE SET NULL,
 		book_study_director_id INTEGER REFERENCES volunteers (id) ON DELETE SET NULL,
 		book_study_reader_id INTEGER REFERENCES volunteers (id) ON DELETE SET NULL,
