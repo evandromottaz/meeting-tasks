@@ -1,114 +1,111 @@
-import { MEETING_MESSAGES, PERMISSION_MESSAGES } from '@/shared/const';
-import { MeetingRepository } from './repository';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@/shared/exceptions';
+import { MEETING_MESSAGES } from '@/shared/messages';
+import { MeetingTasks } from './enums';
+import { MeetingInput, Repositories, IMeeting, IMeetingRepository, MeetingOutput } from './types';
+import { Result } from '@/shared/types';
 
-export interface Meeting {
-	id?: number | bigint;
-	date: string;
-	taskId: number;
-	volunteerId: number;
-}
+const { BOOK_STUDY_DIRECTOR, BOOK_STUDY_READER, CHAIRMAN, SPIRITUAL_GEMS_DIRECTOR, TREASURES_SPEAKER, CHRISTIAN_LIFE } =
+	MeetingTasks;
 
-export interface SuccessReturning {
-	data: Meeting;
-	message: string;
-}
+export class Meeting implements IMeeting {
+	private readonly repository: IMeetingRepository;
+	private readonly permissionRepository?: Repositories['permissionRepository'];
+	private readonly volunteerRepository?: Repositories['volunteerRepository'];
+	private readonly taskRepository?: Repositories['taskRepository'];
 
-interface TaskRepository {
-	getById: (id: number) => unknown;
-}
-
-interface VolunteerRepository {
-	getById: (id: number) => unknown;
-}
-
-interface PermissionRepository {
-	findByVolunteerAndTask: ({
-		taskId,
-		volunteerId,
-	}: Pick<Meeting, 'taskId' | 'volunteerId'>) => unknown;
-}
-
-interface Props {
-	readonly repository: MeetingRepository;
-	readonly permissionRepository?: PermissionRepository;
-	readonly volunteerRepository?: VolunteerRepository;
-	readonly taskRepository?: TaskRepository;
-}
-
-export class MeetingModel {
-	private readonly repository: MeetingRepository;
-	private readonly permissionRepository?: PermissionRepository;
-	private readonly volunteerRepository?: VolunteerRepository;
-	private readonly taskRepository?: TaskRepository;
-
-	constructor({ repository, permissionRepository, volunteerRepository, taskRepository }: Props) {
+	constructor({ repository, permissionRepository, volunteerRepository, taskRepository }: Repositories) {
 		this.repository = repository;
 		this.permissionRepository = permissionRepository;
 		this.volunteerRepository = volunteerRepository;
 		this.taskRepository = taskRepository;
 	}
 
-	create(meeting: Meeting): SuccessReturning {
-		if (!this.permissionRepository)
-			throw new Error(MEETING_MESSAGES.PERMISSION_REPOSITORY_REQUIRED);
+	create(meeting: MeetingInput): Result<MeetingOutput> {
+		if (!this.permissionRepository) throw new Error(MEETING_MESSAGES.PERMISSION_REPOSITORY_REQUIRED);
 		if (!this.volunteerRepository) throw new Error(MEETING_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
 		if (!this.taskRepository) throw new Error(MEETING_MESSAGES.TASK_REPOSITORY_REQUIRED);
 
+		const errorsVolunteers = this.getVolunteersErrors(meeting);
+		if (errorsVolunteers.length)
+			return { ok: false, errors: errorsVolunteers, message: MEETING_MESSAGES.VOLUNTEER_NOT_FOUND };
+
+		const errorPermissions = this.getPermissionsErrors(meeting);
+		if (errorPermissions.length)
+			return { errors: errorPermissions, message: MEETING_MESSAGES.CREATED_ERROR_PERMISSION, ok: false };
+
 		const date = new Date(meeting.date).getTime();
-		if (isNaN(date)) throw new BadRequestError(MEETING_MESSAGES.DATE_INVALID);
+		if (isNaN(date)) return { message: MEETING_MESSAGES.DATE_INVALID, ok: false };
 
-		const now = new Date().getTime();
-		if (date < now) throw new BadRequestError(MEETING_MESSAGES.DATE_INVALID_RANGE);
-
-		const volunteer = this.volunteerRepository.getById(meeting.volunteerId);
-		if (!volunteer) throw new NotFoundError(MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);
-
-		const task = this.taskRepository.getById(meeting.taskId);
-		if (!task) throw new NotFoundError(MEETING_MESSAGES.TASK_NOT_FOUND);
-
-		const hasPermission = !!this.permissionRepository.findByVolunteerAndTask(meeting);
-		if (!hasPermission) throw new ForbiddenError(MEETING_MESSAGES.PERMISSION_DENIED);
+		const isFutureDate = new Date().getTime() < date;
+		if (!isFutureDate) return { message: MEETING_MESSAGES.DATE_INVALID_RANGE, ok: false };
 
 		return {
 			data: this.repository.create(meeting),
 			message: MEETING_MESSAGES.CREATED,
+			ok: true,
 		};
 	}
 
-	getById(id: Meeting['id']): SuccessReturning {
-		if (isNaN(Number(id))) throw new BadRequestError(MEETING_MESSAGES.ID_INVALID);
+	private getVolunteersErrors({ fieldMinistry, christianLife, ...meeting }: MeetingInput) {
+		const volunteersMapper = new Map<number, boolean>();
+		Object.values(meeting).forEach((volunteerId) => {
+			if (isNaN(+volunteerId)) return;
 
-		const data = this.repository.getById(id);
-		return { data, message: MEETING_MESSAGES.FOUND };
+			volunteersMapper.set(+volunteerId, true);
+		});
+
+		volunteersMapper.forEach((_, id) => {
+			volunteersMapper.set(id, !!this.volunteerRepository!.getById(id));
+		});
+
+		return [...volunteersMapper.entries()]
+			.filter(([, exists]) => !exists)
+			.map(([id]) => `ID ${id} não está cadastrado.`);
 	}
 
-	update(meeting: Omit<Meeting, 'date'>): SuccessReturning {
-		if (isNaN(Number(meeting.id))) throw new BadRequestError(MEETING_MESSAGES.ID_INVALID);
+	private getPermissionsErrors(meeting: MeetingInput) {
+		const permissionMapper = new Map<string, { taskTitle: MeetingTasks; volunteerId: number }>();
 
-		if (!this.volunteerRepository) throw new Error(MEETING_MESSAGES.VOLUNTEER_REPOSITORY_REQUIRED);
+		const meetingTasks: [keyof Omit<MeetingInput, 'christianLife' | 'fieldMinistry'>, MeetingTasks][] = [
+			['chairmanId', CHAIRMAN],
+			['treasuresTalkerId', TREASURES_SPEAKER],
+			['spiritualGemsDirectorId', SPIRITUAL_GEMS_DIRECTOR],
+			['bookStudyDirectorId', BOOK_STUDY_DIRECTOR],
+			['bookStudyReaderId', BOOK_STUDY_READER],
+		];
 
-		if (!this.taskRepository) throw new Error(MEETING_MESSAGES.TASK_REPOSITORY_REQUIRED);
+		meetingTasks.forEach(([key, taskTitle]) => {
+			const volunteerId = meeting[key];
+			if (!volunteerId || typeof volunteerId != 'number') return;
 
-		if (!this.permissionRepository)
-			throw new Error(MEETING_MESSAGES.PERMISSION_REPOSITORY_REQUIRED);
+			const hasPermission = !!this.permissionRepository!.findByVolunteerIdAndTaskTitle({
+				volunteerId,
+				taskTitle,
+			});
 
-		const volunteer = this.volunteerRepository.getById(meeting.volunteerId);
-		if (!volunteer) throw new NotFoundError(MEETING_MESSAGES.VOLUNTEER_NOT_FOUND);
+			if (!hasPermission) permissionMapper.set(key, { volunteerId, taskTitle });
+		});
 
-		const task = this.taskRepository.getById(meeting.taskId);
-		if (!task) throw new NotFoundError(MEETING_MESSAGES.TASK_NOT_FOUND);
+		meeting.christianLife?.forEach((item, i) => {
+			const { directorId } = item;
+			if (typeof directorId !== 'number') return;
 
-		const hasPermission = !!this.permissionRepository.findByVolunteerAndTask(meeting);
-		if (!hasPermission) throw new ForbiddenError(MEETING_MESSAGES.PERMISSION_DENIED);
+			const hasPermission = !!this.permissionRepository!.findByVolunteerIdAndTaskTitle({
+				volunteerId: directorId,
+				taskTitle: CHRISTIAN_LIFE,
+			});
 
-		return { data: this.repository.update(meeting), message: MEETING_MESSAGES.UPDATED };
-	}
+			if (!hasPermission)
+				permissionMapper.set(`christianLife[${i}].directorId`, {
+					volunteerId: directorId,
+					taskTitle: CHRISTIAN_LIFE,
+				});
+		});
 
-	remove(id: Meeting['id']) {
-		if (isNaN(Number(id))) throw new BadRequestError(MEETING_MESSAGES.ID_INVALID);
+		return [...permissionMapper.values()].map(({ volunteerId, taskTitle }) => {
+			const volunteer = this.volunteerRepository!.getById(volunteerId) as { name: string };
+			if (!volunteer.name) return `Voluntário não encontrado para a designação ${taskTitle}`;
 
-		this.repository.remove(id);
-		return { message: MEETING_MESSAGES.DELETED };
+			return `${volunteer.name} não tem permissão a designação ${taskTitle}`;
+		});
 	}
 }

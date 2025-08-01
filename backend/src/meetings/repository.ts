@@ -1,79 +1,131 @@
 import Database from 'better-sqlite3';
-import { Meeting, SuccessReturning } from './model';
-import { MEETING_MESSAGES } from '@/shared/const';
-import { NotFoundError } from '@/shared/exceptions';
+import { MeetingInput, MeetingOutput, IMeetingRepository } from './types';
 
-interface Row {
-	id: number | bigint;
+type MeetingRow = {
 	date_iso: string;
-	task_id: number;
-	volunteer_id: number;
-}
+	chairman_id: number;
+	chairman_name: string;
+	treasures_talker_id: number;
+	treasures_talker_name: string;
+	treasures_title: string;
+	spiritual_gems_director_id: number;
+	spiritual_gems_director_name: string;
+	book_study_director_id: number;
+	book_study_director_name: string;
+	book_study_reader_id: number;
+	book_study_reader_name: string;
+};
 
-export class MeetingRepository {
+type FieldMinistryRow = {
+	id: number;
+	meeting_date: string;
+	student_id: number;
+	student_name: string;
+	helper_id: number | null;
+	helper_name: string | null;
+	title: string | null;
+	type: string;
+};
+
+type ChristianLifeRow = {
+	id: number;
+	meeting_date: string;
+	director_id: number;
+	director_name: string;
+	title: string;
+};
+
+export class MeetingRepository implements IMeetingRepository {
 	constructor(readonly db: InstanceType<typeof Database>) {
 		this.db = db;
 	}
 
-	create({ date, taskId, volunteerId }: Meeting) {
-		const row = this.db
-			.prepare('INSERT INTO meetings(date_iso, task_id, volunteer_id) VALUES (?, ?, ?)')
-			.run(date, taskId, volunteerId);
+	create({ date, ...meeting }: MeetingInput): MeetingOutput {
+		const meetingOverviewTransaction = this.db.transaction(() => {
+			const meetingSQLMapper = new Map<keyof MeetingRow, string | number>([
+				['date_iso', date],
+				['chairman_id', meeting.chairmanId],
+				['treasures_talker_id', meeting.treasuresTalkerId],
+				['treasures_title', meeting.treasuresTitle],
+				['spiritual_gems_director_id', meeting.spiritualGemsDirectorId],
+				['book_study_director_id', meeting.bookStudyDirectorId],
+				['book_study_reader_id', meeting.bookStudyReaderId],
+			]);
 
-		return { id: row.lastInsertRowid, date, taskId, volunteerId };
-	}
+			const meetingKeys = [...meetingSQLMapper.keys()];
+			const meetingValues = [...meetingSQLMapper.values()];
 
-	listAll(): Meeting[] {
-		const rows = this.db.prepare('SELECT id, date_iso, task_id, volunteer_id FROM meetings').all();
-		return (rows as Row[]).map(({ date_iso, task_id, volunteer_id, id }) => ({
-			id,
-			date: date_iso,
-			taskId: task_id,
-			volunteerId: volunteer_id,
-		}));
-	}
+			this.db
+				.prepare(`INSERT INTO meetings(${meetingKeys.join(', ')}) VALUES (${meetingKeys.map(() => '?').join(', ')})`)
+				.run(...meetingValues);
 
-	findByVolunteerAndRole({ taskId, volunteerId }: Meeting) {
-		return this.db
-			.prepare('SELECT id FROM permissions WHERE task_id = ? AND volunteer_id = ?')
-			.get(taskId, volunteerId);
-	}
+			if (meeting.fieldMinistry) {
+				const fieldMinistryStmt = this.db.prepare(
+					'INSERT INTO meetings_field_ministry(meeting_date, student_id, helper_id, title, task_id) VALUES (?, ?, ?, ?, ?)'
+				);
 
-	getById(id: Meeting['id']): Meeting {
-		const row = this.db.prepare('SELECT * FROM meetings WHERE id = ?').get(id) as Row;
-		if (!row) throw new NotFoundError(MEETING_MESSAGES.NOT_FOUND);
+				const tasksStmt = this.db.prepare('SELECT id FROM tasks WHERE id = ?');
 
+				for (const fieldMinistry of meeting.fieldMinistry) {
+					const { studentId, taskTitle } = fieldMinistry;
+					const title = 'title' in fieldMinistry ? fieldMinistry.title : null;
+					const helperId = 'helperId' in fieldMinistry ? fieldMinistry.helperId : null;
+					fieldMinistryStmt.run(date, studentId, helperId, title, tasksStmt.get(taskTitle));
+				}
+			}
+
+			if (meeting.christianLife) {
+				const christianLifeStmt = this.db.prepare(
+					'INSERT INTO meetings_christian_life(meeting_date, director_id, title) VALUES (?, ?, ?)'
+				);
+
+				for (const { title, directorId } of meeting.christianLife) {
+					christianLifeStmt.run(date, directorId, title);
+				}
+			}
+
+			const overview = this.db.prepare('SELECT * FROM meetings_overview WHERE date_iso = ?').get(date);
+			const fieldMinistry = this.db
+				.prepare('SELECT * FROM meetings_field_ministry_overview WHERE meeting_date = ?')
+				.all(date);
+			const christianLife = this.db
+				.prepare('SELECT * FROM meetings_christian_life_overview WHERE meeting_date = ?')
+				.all(date);
+
+			return {
+				overview: overview as MeetingRow,
+				fieldMinistry: fieldMinistry as FieldMinistryRow[],
+				christianLife: christianLife as ChristianLifeRow[],
+			};
+		});
+		const { overview, christianLife, fieldMinistry } = meetingOverviewTransaction();
 		return {
-			id: row.id,
-			date: row.date_iso,
-			taskId: row.task_id,
-			volunteerId: row.volunteer_id,
+			date: overview.date_iso,
+			chairmanId: overview.chairman_id,
+			chairmanName: overview.chairman_name,
+			treasuresTitle: overview.treasures_title,
+			treasuresTalkerId: overview.treasures_talker_id,
+			treasuresTalkerName: overview.treasures_talker_name,
+			spiritualGemsDirectorId: overview.spiritual_gems_director_id,
+			spiritualGemsDirectorName: overview.spiritual_gems_director_name,
+			bookStudyDirectorId: overview.book_study_director_id,
+			bookStudyDirectorName: overview.book_study_director_name,
+			bookStudyReaderId: overview.book_study_reader_id,
+			bookStudyReaderName: overview.book_study_reader_name,
+			fieldMinistry: fieldMinistry.map(({ id, title, student_id, helper_id, student_name, helper_name }) => ({
+				id,
+				title,
+				studentId: student_id,
+				studentName: student_name,
+				helperId: helper_id,
+				helperName: helper_name,
+			})),
+			christianLife: christianLife.map(({ id, title, director_id, director_name }) => ({
+				id,
+				directorId: director_id,
+				title,
+				directorName: director_name,
+			})),
 		};
-	}
-
-	update({ taskId, volunteerId, id }: Omit<Meeting, 'date'>) {
-		const queryMap = new Map([
-			['task_id', taskId],
-			['volunteer_id', volunteerId],
-		]);
-
-		if (!taskId) queryMap.delete('task_id');
-		if (!volunteerId) queryMap.delete('volunteer_id');
-
-		const query = [...queryMap.keys()].map((column) => `${column} = ?`).join(',');
-
-		const row = this.db
-			.prepare(`UPDATE meetings SET ${query} WHERE id = ?`)
-			.run(...queryMap.values(), id);
-
-		if (!row.changes) throw new NotFoundError(MEETING_MESSAGES.NOT_FOUND);
-		const data = this.db.prepare('SELECT * FROM meetings WHERE id = ?').get(id) as Row;
-
-		return { id, date: data.date_iso, taskId: data.task_id, volunteerId: data.volunteer_id };
-	}
-
-	remove(id: Meeting['id']) {
-		const row = this.db.prepare('DELETE FROM meetings WHERE id = ?').run(id);
-		if (!row.changes) throw new NotFoundError(MEETING_MESSAGES.NOT_FOUND);
 	}
 }
