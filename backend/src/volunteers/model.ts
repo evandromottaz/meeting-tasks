@@ -1,4 +1,3 @@
-import { BadRequestError } from '@/shared/exceptions';
 import { VolunteerRepository } from './repository';
 import { MESSAGES } from './messages';
 
@@ -31,7 +30,7 @@ export class VolunteerModel {
 
 	create(volunteerName: string) {
 		const volunteer = this.repository.getByName(volunteerName);
-		if (volunteer) throw new BadRequestError(`${MESSAGES.ALREADY_EXISTIS}: ${volunteerName}`);
+		if (volunteer) throw new Error(`${MESSAGES.ALREADY_EXISTIS}: ${volunteerName}`);
 		return this.repository.create({ name: volunteerName });
 	}
 
