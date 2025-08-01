@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import { schema } from './schema';
 import { Meeting } from './model';
 import { MeetingRepository } from './repository';
-import { TaskRepository } from '@/tasks/repository';
-import { VolunteerRepository } from '@/volunteers/repository';
-import { PermissionRepository } from '@/permissions/repository';
+import { TaskRepository } from '@/app/tasks/repository';
+import { VolunteerRepository } from '@/app/volunteers/repository';
+import { PermissionRepository } from '@/app/permissions/repository';
 import { parseFieldMinistryInput } from './utils';
 
 export async function create(req: Request, res: Response) {

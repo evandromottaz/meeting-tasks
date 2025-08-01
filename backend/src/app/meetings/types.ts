@@ -1,4 +1,4 @@
-import { Result } from '@/shared/types';
+import { Result } from '@/shared/types/result-pattern';
 import { MeetingFieldMinistry } from './enums';
 
 export type FieldMinistryInput = {

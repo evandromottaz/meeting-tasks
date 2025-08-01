@@ -3,9 +3,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { setupTestApp } from './helpers/setup-test-app';
 import type { App } from '@/index';
 import { MEETING_MESSAGES } from '@/shared/messages';
-import { MeetingFieldMinistry, MeetingTasks } from '@/meetings/enums';
-import { ChristianLifeInput, FieldMinistryInput, MeetingInput, MeetingOutput } from '@/meetings/types';
-import { Result } from '@/shared/types';
+import { MeetingFieldMinistry, MeetingTasks } from '@/app/meetings/enums';
+import { ChristianLifeInput, FieldMinistryInput, MeetingInput, MeetingOutput } from '@/app/meetings/types';
+import { Result } from '@/shared/types/result-pattern';
 
 let app: App;
 

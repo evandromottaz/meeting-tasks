@@ -1,7 +1,7 @@
 import { MEETING_MESSAGES } from '@/shared/messages';
 import { MeetingTasks } from './enums';
 import { MeetingInput, Repositories, IMeeting, IMeetingRepository, MeetingOutput } from './types';
-import { Result } from '@/shared/types';
+import { Result } from '@/shared/types/result-pattern';
 
 const { BOOK_STUDY_DIRECTOR, BOOK_STUDY_READER, CHAIRMAN, SPIRITUAL_GEMS_DIRECTOR, TREASURES_SPEAKER, CHRISTIAN_LIFE } =
 	MeetingTasks;

@@ -1,8 +1,8 @@
 import express from 'express';
-import volunteersRoutes from '@/volunteers/routes';
-import tasksRoutes from '@/tasks/routes';
-import permissionsRoutes from '@/permissions/routes';
-import meetingsRoutes from '@/meetings/routes';
+import volunteersRoutes from '@/app/volunteers/routes';
+import tasksRoutes from '@/app/tasks/routes';
+import permissionsRoutes from '@/app/permissions/routes';
+import meetingsRoutes from '@/app/meetings/routes';
 import Database from 'better-sqlite3';
 import path from 'path';
 

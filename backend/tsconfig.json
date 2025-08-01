@@ -8,6 +8,6 @@
 		"paths": {
 			"@/*": ["*"]
 		},
-		"typeRoots": ["./src/types","./node_modules/@types"]
+		"typeRoots": ["src/shared/types", "./node_modules/@types"]
 	}
 }
