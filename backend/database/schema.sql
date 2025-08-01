@@ -274,11 +274,11 @@ SELECT
 	book_study_reader.volunteer_name AS book_study_reader_name
 FROM
 	meetings
-	INNER JOIN volunteers chairman ON chairman.id = meetings.chairman_id
-	INNER JOIN volunteers treasures_talker ON treasures_talker.id = meetings."treasures_talker_id"
-	INNER JOIN volunteers spiritual_gems_director ON spiritual_gems_director.id = meetings.spiritual_gems_director_id
-	INNER JOIN volunteers book_study_director ON book_study_director.id = meetings.book_study_director_id
-	INNER JOIN volunteers book_study_reader ON book_study_reader.id = meetings.book_study_reader_id
+	LEFT JOIN volunteers chairman ON chairman.id = meetings.chairman_id
+	LEFT JOIN volunteers treasures_talker ON treasures_talker.id = meetings."treasures_talker_id"
+	LEFT JOIN volunteers spiritual_gems_director ON spiritual_gems_director.id = meetings.spiritual_gems_director_id
+	LEFT JOIN volunteers book_study_director ON book_study_director.id = meetings.book_study_director_id
+	LEFT JOIN volunteers book_study_reader ON book_study_reader.id = meetings.book_study_reader_id
 ORDER BY
 	meetings.created_at;
 
