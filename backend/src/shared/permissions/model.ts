@@ -53,7 +53,7 @@ export class PermissionModel {
 		const volunteer = this.volunteerRepository.getById(permission.volunteerId);
 		if (!volunteer) throw new PermissionError(404, PERMISSION_MESSAGES.VOLUNTEER_NOT_FOUND);
 
-		const task = this.taskRepository.getById(permission.taskId);
+		const task = this.taskRepository.getById(permission.taskId!);
 		if (!task) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
 
 		const alreadyExists = this.repository.findByVolunteerIdAndTaskId(permission);
@@ -76,7 +76,7 @@ export class PermissionModel {
 		const volunteer = this.volunteerRepository.getById(permission.volunteerId);
 		if (!volunteer) throw new PermissionError(404, PERMISSION_MESSAGES.VOLUNTEER_NOT_FOUND);
 
-		const task = this.taskRepository.getById(permission.taskId);
+		const task = this.taskRepository.getById(permission.taskId!);
 		if (!task) throw new PermissionError(404, PERMISSION_MESSAGES.TASK_NOT_FOUND);
 
 		const row = this.repository.getById(permission.id);
