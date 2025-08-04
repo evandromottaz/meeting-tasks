@@ -2,7 +2,7 @@ import express from 'express';
 import volunteersRoutes from '@/shared/volunteers/routes';
 import tasksRoutes from '@/shared/tasks/routes';
 import permissionsRoutes from '@/shared/permissions/routes';
-import meetingsRoutes from '@/app/meetings/routes';
+import meetingsRoutes from '@/features/meetings/routes';
 import Database from 'better-sqlite3';
 import path from 'path';
 
