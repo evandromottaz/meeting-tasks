@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { schema } from './schema';
 import { PermissionError, PermissionModel } from './model';
 import { PermissionRepository } from './repository';
-import { TaskRepository } from '@/app/tasks/repository';
-import { VolunteerRepository } from '@/app/volunteers/repository';
+import { TaskRepository } from '@/shared/tasks/repository';
+import { VolunteerRepository } from '@/shared/volunteers/repository';
 
 export async function create(req: Request, res: Response) {
 	try {
