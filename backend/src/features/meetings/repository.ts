@@ -40,68 +40,14 @@ export class MeetingRepository implements IMeetingRepository {
 		this.db = db;
 	}
 
-	create({ date, ...meeting }: MeetingInput): MeetingOutput {
-		const meetingOverviewTransaction = this.db.transaction(() => {
-			const meetingSQLMapper = new Map<keyof MeetingRow, string | number | undefined>([
-				['date_iso', date],
-				['chairman_id', meeting.chairmanId],
-				['treasures_talker_id', meeting.treasuresTalkerId],
-				['treasures_title', meeting.treasuresTitle],
-				['spiritual_gems_director_id', meeting.spiritualGemsDirectorId],
-				['book_study_director_id', meeting.bookStudyDirectorId],
-				['book_study_reader_id', meeting.bookStudyReaderId],
-			]);
+	create(meeting: MeetingInput): MeetingOutput {
+		const { overview, christianLife, fieldMinistry } = this.db.transaction(() => {
+			const overview = this.createMeeting(meeting);
+			const fieldMinistry = this.createFieldMinistry(meeting);
+			const christianLife = this.createChristianLife(meeting);
 
-			const meetingEntries = [...meetingSQLMapper.entries()].filter((entry) => entry[1] !== undefined);
-			const meetingKeys = meetingEntries.map((entry) => entry[0]);
-			const meetingValues = meetingEntries.map((entry) => entry[1]);
-
-			const row = this.db
-				.prepare(`INSERT INTO meetings(${meetingKeys.join(', ')}) VALUES (${meetingKeys.map(() => '?').join(', ')})`)
-				.run(...meetingValues);
-			if (!row.changes) throw new Error('Reunião não foi cadastrada no banco');
-
-			if (Array.isArray(meeting.fieldMinistry)) {
-				const fieldMinistryStmt = this.db.prepare(
-					'INSERT INTO meetings_field_ministry(meeting_date, student_id, helper_id, title, task_id) VALUES (?, ?, ?, ?, ?)'
-				);
-
-				const tasksStmt = this.db.prepare('SELECT id FROM tasks WHERE id = ?');
-
-				for (const fieldMinistry of meeting.fieldMinistry) {
-					const { studentId, taskTitle } = fieldMinistry;
-					const title = 'title' in fieldMinistry ? fieldMinistry.title : null;
-					const helperId = 'helperId' in fieldMinistry ? fieldMinistry.helperId : null;
-					fieldMinistryStmt.run(date, studentId, helperId, title, tasksStmt.get(taskTitle));
-				}
-			}
-
-			if (Array.isArray(meeting.christianLife)) {
-				const christianLifeStmt = this.db.prepare(
-					'INSERT INTO meetings_christian_life(meeting_date, director_id, title) VALUES (?, ?, ?)'
-				);
-
-				for (const { title, directorId } of meeting.christianLife) {
-					christianLifeStmt.run(date, directorId, title);
-				}
-			}
-
-			const overview = this.db.prepare('SELECT * FROM meetings_overview WHERE date_iso = ?').get(date);
-
-			const fieldMinistry = this.db
-				.prepare('SELECT * FROM meetings_field_ministry_overview WHERE meeting_date = ?')
-				.all(date);
-			const christianLife = this.db
-				.prepare('SELECT * FROM meetings_christian_life_overview WHERE meeting_date = ?')
-				.all(date);
-
-			return {
-				overview: overview as MeetingRow,
-				fieldMinistry: fieldMinistry as FieldMinistryRow[],
-				christianLife: christianLife as ChristianLifeRow[],
-			};
-		});
-		const { overview, christianLife, fieldMinistry } = meetingOverviewTransaction();
+			return { overview, fieldMinistry, christianLife };
+		})();
 
 		return {
 			date: overview.date_iso,
@@ -131,5 +77,78 @@ export class MeetingRepository implements IMeetingRepository {
 				directorName: director_name,
 			})),
 		};
+	}
+
+	private getSQLMapperFromEntries<T>(entries: Array<[string, number | string | undefined]>) {
+		const mapper = new Map(entries);
+		const mapperEntries = [...mapper.entries()].filter((entry) => entry[1] !== undefined);
+
+		return {
+			keys: mapperEntries.map((entry) => entry[0]),
+			values: mapperEntries.map((entry) => entry[1]),
+		};
+	}
+
+	private createMeeting(meeting: MeetingInput): MeetingRow {
+		const meetingSQLMapper = this.getSQLMapperFromEntries([
+			['date_iso', meeting.date],
+			['chairman_id', meeting.chairmanId],
+			['treasures_talker_id', meeting.treasuresTalkerId],
+			['treasures_title', meeting.treasuresTitle],
+			['spiritual_gems_director_id', meeting.spiritualGemsDirectorId],
+			['book_study_director_id', meeting.bookStudyDirectorId],
+			['book_study_reader_id', meeting.bookStudyReaderId],
+		]);
+
+		const meetingKeys = meetingSQLMapper.keys;
+		const meetingValues = meetingSQLMapper.values;
+
+		const row = this.db
+			.prepare(`INSERT INTO meetings(${meetingKeys.join(', ')}) VALUES (${meetingKeys.map(() => '?').join(', ')})`)
+			.run(...meetingValues);
+		if (!row.changes) throw new Error('Erro ao cadastrar reunião no servidor');
+
+		return this.db.prepare('SELECT * FROM meetings_overview WHERE date_iso = ?').get(meeting.date) as MeetingRow;
+	}
+
+	private createFieldMinistry(meeting: MeetingInput): FieldMinistryRow[] {
+		if (!Array.isArray(meeting.fieldMinistry)) return [];
+
+		const fieldMinistryStmt = this.db.prepare(
+			'INSERT INTO meetings_field_ministry(meeting_date, student_id, helper_id, title, task_id) VALUES (?, ?, ?, ?, ?)'
+		);
+
+		const tasksStmt = this.db.prepare('SELECT id FROM tasks WHERE id = ?');
+
+		for (const fieldMinistry of meeting.fieldMinistry) {
+			const { studentId, taskTitle } = fieldMinistry;
+			const title = 'title' in fieldMinistry ? fieldMinistry.title : null;
+			const helperId = 'helperId' in fieldMinistry ? fieldMinistry.helperId : null;
+			fieldMinistryStmt.run(meeting.date, studentId, helperId, title, tasksStmt.get(taskTitle));
+		}
+
+		return (
+			(this.db
+				.prepare('SELECT * FROM meetings_field_ministry_overview WHERE meeting_date = ?')
+				.all(meeting.date) as FieldMinistryRow[]) || []
+		);
+	}
+
+	private createChristianLife(meeting: MeetingInput): ChristianLifeRow[] {
+		if (!Array.isArray(meeting.christianLife)) return [];
+
+		const christianLifeStmt = this.db.prepare(
+			'INSERT INTO meetings_christian_life(meeting_date, director_id, title) VALUES (?, ?, ?)'
+		);
+
+		for (const { title, directorId } of meeting.christianLife) {
+			christianLifeStmt.run(meeting.date, directorId, title);
+		}
+
+		return (
+			(this.db
+				.prepare('SELECT * FROM meetings_christian_life_overview WHERE meeting_date = ?')
+				.all(meeting.date) as ChristianLifeRow[]) || []
+		);
 	}
 }
