@@ -151,4 +151,14 @@ export class MeetingRepository implements IMeetingRepository {
 				.all(meeting.date) as ChristianLifeRow[]) || []
 		);
 	}
+
+	listAll(): MeetingInput[] {
+		const rows = this.db.prepare('SELECT * FROM meetings_overview').all();
+		return (rows as MeetingRow[]).map((row) => ({
+			date: row.date_iso,
+			bookStudyDirectorId: row.book_study_director_id,
+			bookStudyReaderId: row.book_study_director_id,
+			chairmanId: row.chairman_id,
+		}));
+	}
 }

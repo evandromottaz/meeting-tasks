@@ -67,6 +67,7 @@ export interface IMeeting {
 
 export interface IMeetingRepository {
 	create: (meeting: MeetingInput) => MeetingOutput;
+	listAll: () => MeetingInput[];
 }
 
 export type Repositories = {
